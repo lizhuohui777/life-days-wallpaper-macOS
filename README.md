@@ -14,7 +14,7 @@
 
 适用于 macOS 13 及以上，支持 Apple 芯片和 Intel Mac。
 
-1. 从 [下载页面](https://github.com/lizhuohui777/life-days-wallpaper-macOS/releases/tag/v1.8.1-beta.1) 下载 **Life-Days-Wallpaper-1.8.1-beta.1.dmg**。GitHub 的 `Source code` 是开发源码，不是安装包。
+1. 从 [下载页面](https://github.com/lizhuohui777/life-days-wallpaper-macOS/releases/tag/v1.8.1-beta.2) 下载 **Life-Days-Wallpaper-1.8.1-beta.2.dmg**。GitHub 的 `Source code` 是开发源码，不是安装包。
 2. 打开 DMG，把「人生天数壁纸」拖到「Applications / 应用程序」，再打开应用。
 3. 设置日期和玩家名字；点击「选择背景图片…」导入自己的照片，再点击「应用并开启每日更新」。首次应用时允许控制 System Events。
 

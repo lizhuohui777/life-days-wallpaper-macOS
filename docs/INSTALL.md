@@ -2,7 +2,7 @@
 
 支持 macOS 13 或更新版本，Apple 芯片及 Intel Mac。安装 DMG 不需要 Xcode、Python 或命令行。
 
-1. 打开[下载页面](https://github.com/lizhuohui777/life-days-wallpaper-macOS/releases/tag/v1.8.1-beta.1)，在 Assets 中下载 `Life-Days-Wallpaper-1.8.1-beta.1.dmg`，不要选择 `Source code`。
+1. 打开[下载页面](https://github.com/lizhuohui777/life-days-wallpaper-macOS/releases/tag/v1.8.1-beta.2)，在 Assets 中下载 `Life-Days-Wallpaper-1.8.1-beta.2.dmg`，不要选择 `Source code`。
 2. 双击 DMG，将「人生天数壁纸.app」拖到「Applications / 应用程序」。在「应用程序」中打开它，不要一直从 DMG 中运行。
 3. 设置起始日期与玩家名字。起始当天为第 1 天；如需狮子背景，先下载仓库附赠的 `bonus/lion.jpg`，再点击「选择背景图片…」导入。
 4. 点击「应用并开启每日更新」，按系统提示允许控制 System Events。壁纸应立即更新，之后后台每 60 秒检查一次日期，并安排午夜检查；休眠期间暂停，唤醒后恢复。
