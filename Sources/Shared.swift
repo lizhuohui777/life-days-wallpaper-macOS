@@ -1,6 +1,34 @@
 import AppKit
 import ImageIO
 import UniformTypeIdentifiers
+import CryptoKit
+
+enum WallpaperUpdate {
+    static func outputURL(root: URL, key: String) -> URL {
+        let digest = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
+        return root.appendingPathComponent("wallpaper-v14-\(digest).png")
+    }
+    static func needsApplication(expected: URL, actual: [URL?]) -> Bool {
+        actual.isEmpty || actual.contains { $0?.standardizedFileURL != expected.standardizedFileURL }
+    }
+    static func ownsFilename(_ name: String) -> Bool {
+        name == "wallpaper.png" || name.range(of: "^wallpaper-[0-9]{4}-[0-9]{2}-[0-9]{2}\\.png$", options: .regularExpression) != nil || name.range(of: "^wallpaper-v14-[a-f0-9]{64}\\.png$", options: .regularExpression) != nil
+    }
+    // Includes mixed collections: never remove an image that any system entry still references.
+    static func referencedFiles(in data: Data, root: URL) throws -> Set<String> {
+        var names = Set<String>()
+        func visit(_ value: Any) {
+            if let dict = value as? [String: Any] { dict.values.forEach(visit) }
+            else if let array = value as? [Any] { array.forEach(visit) }
+            else if let bytes = value as? Data, let nested = try? PropertyListSerialization.propertyList(from: bytes, format: nil) { visit(nested) }
+            else if let text = value as? String, let url = URL(string: text), url.isFileURL,
+                    url.deletingLastPathComponent().standardizedFileURL.path == root.standardizedFileURL.path,
+                    ownsFilename(url.lastPathComponent) { names.insert(url.lastPathComponent) }
+        }
+        visit(try PropertyListSerialization.propertyList(from: data, format: nil))
+        return names
+    }
+}
 
 // Shared, side-effect-free logic used by the app, worker, and tests.
 enum LifeDays {
@@ -39,7 +67,7 @@ func migrateWallpaperStore(_ data: Data, root: URL, output: URL) throws -> Data?
               let relative = location["relative"] as? String,
               let url = URL(string: relative), url.isFileURL,
               url.deletingLastPathComponent().standardizedFileURL.path == root.standardizedFileURL.path else { return false }
-        return url.lastPathComponent == "wallpaper.png" || url.lastPathComponent.range(of: "^wallpaper-[0-9]{4}-[0-9]{2}-[0-9]{2}\\.png$", options: .regularExpression) != nil
+        return WallpaperUpdate.ownsFilename(url.lastPathComponent)
     }
     func rewrite(_ value: Any) throws -> Any {
         if let array = value as? [Any] { return try array.map(rewrite) }

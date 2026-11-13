@@ -72,4 +72,22 @@ expect(content["Shuffle"] as? String == "$null", "Shuffle disabled")
 let choices = content["Choices"] as! [NSDictionary]
 let config = try PropertyListSerialization.propertyList(from: choices[0]["Configuration"] as! Data, format: nil) as! NSDictionary
 expect((config["url"] as! NSDictionary)["relative"] as? String == output.absoluteString, "Stable wallpaper reference")
+let oldKey = "2026-11-10-v14-settings"
+let newKey = "2026-11-13-v14-settings"
+let oldURL = WallpaperUpdate.outputURL(root: ownedRoot, key: oldKey)
+let newURL = WallpaperUpdate.outputURL(root: ownedRoot, key: newKey)
+expect(oldURL != newURL, "Day change must invalidate the macOS wallpaper URL cache")
+expect(newURL == WallpaperUpdate.outputURL(root: ownedRoot, key: newKey), "Same revision must have a stable URL")
+expect(WallpaperUpdate.needsApplication(expected: newURL, actual: [newURL, oldURL]), "A stale second screen must trigger repair even with today's marker")
+expect(WallpaperUpdate.needsApplication(expected: newURL, actual: [nil]), "Unavailable wallpaper state must retry")
+expect(WallpaperUpdate.needsApplication(expected: newURL, actual: []), "No screens must never count as success")
+expect(!WallpaperUpdate.needsApplication(expected: newURL, actual: [newURL, newURL]), "All screens verified can skip rendering")
+expect(!WallpaperUpdate.ownsFilename("wallpaper-v14-personal.png"), "Never treat arbitrary personal files as owned")
+let versionTree: [String: Any] = ["SystemDefault": ["Desktop": ["Content": ["Choices": [try choice(oldURL)], "Shuffle": "enabled"]], "Idle": idle], "Mixed": ["Desktop": ["Content": ["Choices": [try choice(oldURL), personal]]]]]
+let versionData = try PropertyListSerialization.data(fromPropertyList: versionTree, format: .binary, options: 0)
+let versionMigrated = try migrateWallpaperStore(versionData, root: ownedRoot, output: newURL)!
+let references = try WallpaperUpdate.referencedFiles(in: versionMigrated, root: ownedRoot)
+expect(references.contains(newURL.lastPathComponent), "Versioned image references must migrate")
+expect(references.contains(oldURL.lastPathComponent), "A mixed collection's still-referenced image must be retained")
+expect(LifeDays.count(start: date(2024, 1, 1, in: calendar), today: date(2024, 1, 4, in: calendar), calendar: calendar) == 4, "Three-day catch-up includes the starting day")
 print("Passed \(checked) checks: calendar, image validation/privacy, and scoped migration.")

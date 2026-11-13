@@ -12,7 +12,7 @@ FILES = [
     'scripts/build.sh', 'scripts/open-app.command', 'Resources/使用说明.txt',
     'scripts/test.sh', 'scripts/strip_photo_metadata.py',
     'scripts/make_example_background.swift', 'scripts/make_icon.swift', 'scripts/export_public_source.py',
-    'Tests/main.swift', 'Tests/test_metadata.py',
+    'Tests/main.swift', 'Tests/test_metadata.py', 'Tests/test_worker_preview.py',
     'docs/INSTALL.md', 'docs/DEVELOPMENT.md', 'docs/UNINSTALL.md', 'docs/RELEASING.md', 'docs/VALIDATION.md', 'docs/LICENSE-MIT.proposed',
     'docs/images/interface.svg', 'docs/images/example-wallpaper.png', 'docs/images/lion-wallpaper.jpg',
     'bonus/README.md', 'bonus/lion.jpg',

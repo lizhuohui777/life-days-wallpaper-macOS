@@ -39,6 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let data = try? Data(contentsOf: root.appendingPathComponent("settings.plist")), let settings = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: String] { saved = settings["startDate"] ?? saved; playerNameField.stringValue = settings["playerName"] ?? "玩家"
             useCustomBackground = settings["backgroundMode"] == "custom" && FileManager.default.fileExists(atPath: root.appendingPathComponent("custom-background.jpg").path)
             backgroundRevision = settings["backgroundRevision"] ?? "default"
+            cleanupCheckbox.state = settings["cleanupLegacy"] == "true" ? .on : .off
         }
         picker.dateValue = formatter.date(from: saved) ?? Date()
         content.addSubview(picker)
@@ -146,7 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: destination.path)
             let settings = ["startDate": formatter.string(from: picker.dateValue), "playerName": playerName, "backgroundMode": useCustomBackground ? "custom" : "default", "backgroundRevision": backgroundRevision, "cleanupLegacy": cleanupCheckbox.state == .on ? "true" : "false"]
             try PropertyListSerialization.data(fromPropertyList: settings, format: .xml, options: 0).write(to: root.appendingPathComponent("settings.plist"), options: .atomic)
-            let plist: [String: Any] = ["Label": "local.daywallpaper", "ProgramArguments": [destination.path], "RunAtLoad": true, "StartInterval": 60, "StandardOutPath": root.appendingPathComponent("output.log").path, "StandardErrorPath": root.appendingPathComponent("error.log").path]
+            let plist: [String: Any] = ["Label": "local.daywallpaper", "ProgramArguments": [destination.path], "RunAtLoad": true, "StartInterval": 60, "StartCalendarInterval": ["Hour": 0, "Minute": 0], "StandardOutPath": root.appendingPathComponent("output.log").path, "StandardErrorPath": root.appendingPathComponent("error.log").path]
             try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0).write(to: agent, options: .atomic)
             try run("/bin/launchctl", ["bootstrap", "gui/" + uid, agent.path])
             try run(destination.path, [])

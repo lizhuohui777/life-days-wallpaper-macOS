@@ -15,12 +15,86 @@ jobs:
       - name: Shared logic and privacy tests
         run: zsh scripts/test.sh
       - name: Clean-source universal build
-        run: zsh scripts/build.sh --app-only
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v*-beta.* ]]; then
+            zsh scripts/build.sh
+          else
+            zsh scripts/build.sh --app-only
+          fi
       - name: Preview without changing desktop settings
         shell: bash
         run: |
           export DAYWALLPAPER_PREVIEW_ROOT="$RUNNER_TEMP/wallpaper-preview"
           export DAYWALLPAPER_PREVIEW_DATE="2024-01-02"
-          "dist/人生天数壁纸.app/Contents/Resources/day-wallpaper" --preview
-          test -s "$DAYWALLPAPER_PREVIEW_ROOT/wallpaper.png"
+          preview_file="$("dist/人生天数壁纸.app/Contents/Resources/day-wallpaper" --preview)"
+          test -s "$preview_file"
           lipo -archs "dist/人生天数壁纸.app/Contents/Resources/day-wallpaper"
+      - name: Wallpaper cache identity regression
+        run: python3 Tests/test_worker_preview.py "dist/人生天数壁纸.app/Contents/Resources/day-wallpaper"
+      - name: Prepare prerelease installer
+        id: package
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-beta.')
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]
+          version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)
+          [[ "${RELEASE_TAG#v}" == "$version"-beta.* ]]
+          asset="Life-Days-Wallpaper-${RELEASE_TAG#v}.dmg"
+          cp "dist/人生天数壁纸-$version.dmg" "dist/$asset"
+          (cd dist && shasum -a 256 "$asset" > SHA256SUMS.txt)
+          echo "asset=dist/$asset" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.package.outcome == 'success'
+        with:
+          name: macos-installer
+          path: |
+            ${{ steps.package.outputs.asset }}
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+  publish-prerelease:
+    needs: test-and-build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-beta.')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos-installer
+          path: release
+      - name: Publish tested installer
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          修复每日壁纸没有及时更新、不同屏幕保留旧天数的问题。
+
+          ### 安装与更新
+          1. 下载下方 DMG，将应用拖到「Applications / 应用程序」。
+          2. 打开应用，确认日期、名字和照片，点击「应用并开启每日更新」。已有用户也需要点击一次，让后台任务使用新版工具。
+
+          支持 macOS 13+、Apple 芯片与 Intel Mac。当前是使用临时签名的预发布测试版，尚未完成 Developer ID 签名与 Apple 公证。启动如被拦截，仅在确认来源可信后按仓库的 docs/INSTALL.md 操作，不要关闭系统安全保护。
+
+          ### 修复内容
+          - 新内容使用新的图片路径，避免系统复用旧缓存。
+          - 逐屏确认应用结果；发现屏幕仍引用旧图时重新应用，失败重试。
+          - 增加午夜检查、并发运行保护及更新结果日志。
+          - 仅清理不再被系统引用的本程序旧图；兼容清理保持用户选择。
+
+          默认背景为生成的山丘，作者狮子照片在仓库 bonus/ 中独立附赠，由用户自行导入。安装包不包含个人配置、原始照片或日志。
+
+          ### 验证
+          通过共享逻辑与图片隐私测试、实际 worker 跨日与设置变化回归测试、arm64 / x86_64 通用构建及临时签名检查。安装包由此标签源码在 GitHub Actions 构建，校验值见 SHA256SUMS.txt。
+          NOTES
+          gh release create "$RELEASE_TAG" release/*.dmg release/SHA256SUMS.txt \
+            --verify-tag --prerelease \
+            --title "人生天数壁纸 ${RELEASE_TAG#v} · 修复每日更新" \
+            --notes-file "$RUNNER_TEMP/release-notes.md"

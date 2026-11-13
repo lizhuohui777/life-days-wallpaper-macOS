@@ -6,7 +6,7 @@
 
 ## GitHub 发布流程
 
-先确认许可，更新 `Resources/Info.plist` 与 docs/CHANGELOG，再执行测试、通用架构构建和手动 GUI 验证。CI 只测试和构建，不建立 Release，也不发布个人照片。
+先确认许可，更新 `Resources/Info.plist` 与 docs/CHANGELOG，再执行测试、通用架构构建和手动 GUI 验证。普通提交和 PR 只运行测试与构建；推送符合 `v版本-beta.序号` 格式的标签后，CI 会构建通用 DMG，通过测试后自动建立预发布 Release，并附上安装包与 SHA256 校验文件。发布权限仅授予标签触发的发布任务，不发布个人照片。
 
 运行 `python3 scripts/export_public_source.py /private/tmp/life-days-public` 导出白名单源码。核对其中的 README、素材及许可后，再在该目录初始化 Git 并设置远程。不要把上一级“技能树”目录整体上传。
 
