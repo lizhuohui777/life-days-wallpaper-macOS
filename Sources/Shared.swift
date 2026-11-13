@@ -3,6 +3,20 @@ import ImageIO
 import UniformTypeIdentifiers
 import CryptoKit
 
+enum WallpaperSchedule {
+    static func launchAgent(worker: URL, root: URL) -> [String: Any] {
+        ["Label": "local.daywallpaper",
+         "ProgramArguments": [worker.path],
+         "RunAtLoad": true,
+         "StartCalendarInterval": ["Hour": 0, "Minute": 0],
+         // Retry failures only; successful checks exit until the next calendar/login event.
+         "KeepAlive": ["SuccessfulExit": false],
+         "ThrottleInterval": 300,
+         "StandardOutPath": root.appendingPathComponent("output.log").path,
+         "StandardErrorPath": root.appendingPathComponent("error.log").path]
+    }
+}
+
 enum WallpaperUpdate {
     static func outputURL(root: URL, key: String) -> URL {
         let digest = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
@@ -13,6 +27,42 @@ enum WallpaperUpdate {
     }
     static func ownsFilename(_ name: String) -> Bool {
         name == "wallpaper.png" || name.range(of: "^wallpaper-[0-9]{4}-[0-9]{2}-[0-9]{2}\\.png$", options: .regularExpression) != nil || name.range(of: "^wallpaper-v14-[a-f0-9]{64}\\.png$", options: .regularExpression) != nil
+    }
+    @discardableResult
+    static func removeObsoleteImages(root: URL, current: URL, references: Set<String>) throws -> Int {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: current.path) else {
+            throw NSError(domain: "DayWallpaper", code: 13, userInfo: [NSLocalizedDescriptionKey: "当前壁纸尚未保存，保留旧图以便重试。"])
+        }
+        var removed = 0
+        for image in try fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+        where ownsFilename(image.lastPathComponent) && image.standardizedFileURL != current.standardizedFileURL && !references.contains(image.lastPathComponent) {
+            try fm.removeItem(at: image)
+            removed += 1
+        }
+        return removed
+    }
+    static func renderCachePrefix(for image: URL) -> String {
+        SHA256.hash(data: Data(image.standardizedFileURL.path.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+    @discardableResult
+    static func removeRetiredRenderCaches(cacheRoot: URL, retired: [URL], current: URL) throws -> Int {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: cacheRoot.path),
+              (try cacheRoot.resourceValues(forKeys: [.isSymbolicLinkKey])).isSymbolicLink != true else { return 0 }
+        let prefixes = Set(retired.filter {
+            $0.deletingLastPathComponent().standardizedFileURL.path == current.deletingLastPathComponent().standardizedFileURL.path &&
+            $0.standardizedFileURL.path != current.standardizedFileURL.path && ownsFilename($0.lastPathComponent)
+        }.map { renderCachePrefix(for: $0) })
+        var removed = 0
+        for file in try fm.contentsOfDirectory(at: cacheRoot, includingPropertiesForKeys: nil) {
+            let name = file.lastPathComponent
+            guard name.range(of: "^[a-f0-9]{64}-[0-9]+-[0-9]+-[0-9]+-[a-f0-9]{16}\\.bmp$", options: .regularExpression) != nil,
+                  prefixes.contains(String(name.prefix(64))) else { continue }
+            try fm.removeItem(at: file)
+            removed += 1
+        }
+        return removed
     }
     // Includes mixed collections: never remove an image that any system entry still references.
     static func referencedFiles(in data: Data, root: URL) throws -> Set<String> {

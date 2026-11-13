@@ -147,13 +147,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: destination.path)
             let settings = ["startDate": formatter.string(from: picker.dateValue), "playerName": playerName, "backgroundMode": useCustomBackground ? "custom" : "default", "backgroundRevision": backgroundRevision, "cleanupLegacy": cleanupCheckbox.state == .on ? "true" : "false"]
             try PropertyListSerialization.data(fromPropertyList: settings, format: .xml, options: 0).write(to: root.appendingPathComponent("settings.plist"), options: .atomic)
-            let plist: [String: Any] = ["Label": "local.daywallpaper", "ProgramArguments": [destination.path], "RunAtLoad": true, "StartInterval": 60, "StartCalendarInterval": ["Hour": 0, "Minute": 0], "StandardOutPath": root.appendingPathComponent("output.log").path, "StandardErrorPath": root.appendingPathComponent("error.log").path]
+            let plist = WallpaperSchedule.launchAgent(worker: destination, root: root)
             try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0).write(to: agent, options: .atomic)
             try run("/bin/launchctl", ["bootstrap", "gui/" + uid, agent.path])
             try run(destination.path, [])
             selectedImageData = nil
             imageStatus.stringValue = useCustomBackground ? "当前背景：自选图片（仅保存到本机）" : "当前背景：自带照片"
-            status.stringValue = "已应用。每天自动更新，登录或唤醒后最多等待 60 秒。现在可以退出此应用；再次打开可修改日期、玩家名字和背景图片。"
+            status.stringValue = "已应用：每天午夜更新，登录时检查；午夜休眠时在唤醒后补更。失败后自动重试。可以退出应用，再次打开可修改设置。"
         } catch { status.stringValue = error.localizedDescription }
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }

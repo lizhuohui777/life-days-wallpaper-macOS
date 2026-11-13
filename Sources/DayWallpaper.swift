@@ -37,6 +37,24 @@ func cleanSystemWallpaperReferences(root: URL, output: URL) throws {
     }
 }
 
+// Read all system references before deleting only this app's obsolete generated files.
+func pruneUnusedImages(output: URL, cleanupLegacy: Bool) throws {
+    let store = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/com.apple.wallpaper/Store/Index.plist")
+    if let data = try? Data(contentsOf: store), let references = try? WallpaperUpdate.referencedFiles(in: data, root: root) {
+        let previous = try fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil).filter {
+            WallpaperUpdate.ownsFilename($0.lastPathComponent) && $0 != output && !references.contains($0.lastPathComponent)
+        }
+        try WallpaperUpdate.removeObsoleteImages(root: root, current: output, references: references)
+        if cleanupLegacy {
+            let legacy = root.appendingPathComponent("wallpaper.png")
+            let retired = previous + (legacy != output && !references.contains(legacy.lastPathComponent) ? [legacy] : [])
+            let cache = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Containers/com.apple.wallpaper.agent/Data/Library/Caches/com.apple.wallpaper.caches/extension-com.apple.wallpaper.extension.image")
+            do { try WallpaperUpdate.removeRetiredRenderCaches(cacheRoot: cache, retired: retired, current: output) }
+            catch { fputs("旧壁纸已清理；系统渲染缓存暂不可清理：\(error.localizedDescription)\n", stderr) }
+        }
+    }
+}
+
 var calendar = Calendar(identifier: .gregorian)
 calendar.timeZone = .current
 let configURL = root.appendingPathComponent("settings.plist")
@@ -63,7 +81,7 @@ formatter.timeZone = calendar.timeZone
 formatter.dateFormat = "yyyy-MM-dd"
 let stamp = formatter.string(from: today)
 let marker = root.appendingPathComponent("last-date.txt")
-let revisionKey = stamp + "-v14-versioned-" + startString + "-" + playerName + "-" + backgroundRevision
+let revisionKey = stamp + "-v15-owned-cleanup-" + startString + "-" + playerName + "-" + backgroundRevision
 let output = WallpaperUpdate.outputURL(root: root, key: revisionKey)
 let workspace = NSWorkspace.shared
 let screens = preview ? [] : NSScreen.screens
@@ -72,6 +90,7 @@ let currentURLs = screens.map { workspace.desktopImageURL(for: $0) }
 if !preview, (try? String(contentsOf: marker, encoding: .utf8)) == revisionKey,
    fm.fileExists(atPath: output.path), !WallpaperUpdate.needsApplication(expected: output, actual: currentURLs) {
     if cleanupLegacy { try cleanSystemWallpaperReferences(root: root, output: output) }
+    try pruneUnusedImages(output: output, cleanupLegacy: cleanupLegacy)
     exit(0)
 }
 if preview || !fm.fileExists(atPath: output.path) {
@@ -162,14 +181,8 @@ for _ in 0..<10 {
 }
 guard applied else { throw NSError(domain: "DayWallpaper", code: 12, userInfo: [NSLocalizedDescriptionKey: "系统尚未确认壁纸更新，将在下一次检查时重试。成功日期未写入。"]) }
 if cleanupLegacy { try cleanSystemWallpaperReferences(root: root, output: output) }
-// Only delete this app's obsolete generated images after application, and never delete referenced files.
-let store = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/com.apple.wallpaper/Store/Index.plist")
-if let data = try? Data(contentsOf: store), let references = try? WallpaperUpdate.referencedFiles(in: data, root: root) {
-    for url in try fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
-    where WallpaperUpdate.ownsFilename(url.lastPathComponent) && url != output && !references.contains(url.lastPathComponent) {
-        try fm.removeItem(at: url)
-    }
-}
+// Application has been verified; now prune obsolete images.
+try pruneUnusedImages(output: output, cleanupLegacy: cleanupLegacy)
 try revisionKey.write(to: marker, atomically: true, encoding: .utf8)
 let message = "\(ISO8601DateFormatter().string(from: Date())) applied days=\(days) screens=\(screens.count) file=\(output.lastPathComponent)\n"
 let log = root.appendingPathComponent("update.log")
