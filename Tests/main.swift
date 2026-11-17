@@ -121,15 +121,4 @@ expect(retained == 0 && FileManager.default.fileExists(atPath: previousImage.pat
 var missingCurrentRejected = false
  do { _ = try WallpaperUpdate.removeObsoleteImages(root: pruneRoot, current: pruneRoot.appendingPathComponent("missing.png"), references: []) } catch { missingCurrentRejected = true }
 expect(missingCurrentRejected && FileManager.default.fileExists(atPath: previousImage.path), "A failed render must never delete the previous image")
-let cacheRoot = scratch.appendingPathComponent("render-cache")
-try FileManager.default.createDirectory(at: cacheRoot, withIntermediateDirectories: true)
-func cached(_ image: URL) -> URL { cacheRoot.appendingPathComponent(WallpaperUpdate.renderCachePrefix(for: image) + "-3024-1964-0-0123456789abcdef.bmp") }
-let retiredCache = cached(previousImage)
-let activeCache = cached(currentImage)
-let importedCache = cached(importedImage)
-for file in [retiredCache, activeCache, importedCache] { try Data("bitmap".utf8).write(to: file) }
-let removedCaches = try WallpaperUpdate.removeRetiredRenderCaches(cacheRoot: cacheRoot, retired: [previousImage, currentImage, importedImage], current: currentImage)
-expect(removedCaches == 1 && !FileManager.default.fileExists(atPath: retiredCache.path), "Remove only retired owned image caches")
-expect(FileManager.default.fileExists(atPath: activeCache.path), "Never delete the active rendering cache")
-expect(FileManager.default.fileExists(atPath: importedCache.path), "Never delete user-photo or unrelated system caches")
 print("Passed \(checked) checks: calendar, image validation/privacy, and scoped migration.")

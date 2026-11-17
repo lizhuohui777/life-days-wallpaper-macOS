@@ -7,6 +7,7 @@ import sys
 import tempfile
 
 worker = Path(sys.argv[1]).resolve()
+assert b"Library/Containers/" not in worker.read_bytes(), "PRIVACY REGRESSION: worker must not access another app container for cache cleanup"
 with tempfile.TemporaryDirectory(prefix='daywallpaper-preview-regression.') as folder:
     root = Path(folder).resolve()
     settings = {'startDate': '2024-01-01', 'playerName': 'PreviewPlayer', 'backgroundMode': 'default'}

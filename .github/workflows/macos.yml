@@ -30,6 +30,8 @@ jobs:
           preview_file="$("dist/人生天数壁纸.app/Contents/Resources/day-wallpaper" --preview)"
           test -s "$preview_file"
           lipo -archs "dist/人生天数壁纸.app/Contents/Resources/day-wallpaper"
+          cmp LICENSE "dist/人生天数壁纸.app/Contents/Resources/LICENSE"
+          cmp NOTICE "dist/人生天数壁纸.app/Contents/Resources/NOTICE"
       - name: Wallpaper cache identity regression
         run: python3 Tests/test_worker_preview.py "dist/人生天数壁纸.app/Contents/Resources/day-wallpaper"
       - name: Prepare prerelease installer
@@ -75,7 +77,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
-          修复每日壁纸没有及时更新、不同屏幕保留旧天数的问题。
+          修复“访问其他 App 的数据”反复授权提示，保留每日壁纸更新，并以 MIT 许可证开源代码。
 
           ### 安装与更新
           1. 下载下方 DMG，将应用拖到「Applications / 应用程序」。
@@ -83,13 +85,16 @@ jobs:
 
           支持 macOS 13+、Apple 芯片与 Intel Mac。当前是使用临时签名的预发布测试版，尚未完成 Developer ID 签名与 Apple 公证。启动如被拦截，仅在确认来源可信后按仓库的 docs/INSTALL.md 操作，不要关闭系统安全保护。
 
+          ### 开源许可
+          代码、文档文字及程序生成素材采用 MIT 许可证。狮子照片与照片预览继续使用单独授权，不适用 MIT。安装包和应用内附带 LICENSE 与 NOTICE。
+
           ### 修复内容
           - 新内容使用新的图片路径，避免系统复用旧缓存。
           - 逐屏确认应用结果；发现屏幕仍引用旧图时重新应用，失败重试。
           - 改为午夜和登录时检查；午夜休眠时在唤醒后补执行，取消每分钟轮询，仅失败时低频重试。
           - 保留并发运行保护及更新结果日志。
           - 成功应用后仅保留当前生成图，清理不再被系统引用的本程序旧图；重复检查也清理遗漏文件。
-          - 兼容清理开启时，清理可精确匹配的退役图片渲染缓存；不触碰其他照片的缓存。
+          - 移除其他 App 容器访问，系统渲染缓存由 macOS 管理，避免反复出现跨 App 数据授权提示。
 
           默认背景为生成的山丘，作者狮子照片在仓库 bonus/ 中独立附赠，由用户自行导入。安装包不包含个人配置、原始照片或日志。
 
@@ -98,5 +103,5 @@ jobs:
           NOTES
           gh release create "$RELEASE_TAG" release/*.dmg release/SHA256SUMS.txt \
             --verify-tag --prerelease \
-            --title "人生天数壁纸 ${RELEASE_TAG#v} · 修复每日更新" \
+            --title "人生天数壁纸 ${RELEASE_TAG#v} · MIT 开源与权限修复" \
             --notes-file "$RUNNER_TEMP/release-notes.md"

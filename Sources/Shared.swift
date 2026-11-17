@@ -42,28 +42,6 @@ enum WallpaperUpdate {
         }
         return removed
     }
-    static func renderCachePrefix(for image: URL) -> String {
-        SHA256.hash(data: Data(image.standardizedFileURL.path.utf8)).map { String(format: "%02x", $0) }.joined()
-    }
-    @discardableResult
-    static func removeRetiredRenderCaches(cacheRoot: URL, retired: [URL], current: URL) throws -> Int {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: cacheRoot.path),
-              (try cacheRoot.resourceValues(forKeys: [.isSymbolicLinkKey])).isSymbolicLink != true else { return 0 }
-        let prefixes = Set(retired.filter {
-            $0.deletingLastPathComponent().standardizedFileURL.path == current.deletingLastPathComponent().standardizedFileURL.path &&
-            $0.standardizedFileURL.path != current.standardizedFileURL.path && ownsFilename($0.lastPathComponent)
-        }.map { renderCachePrefix(for: $0) })
-        var removed = 0
-        for file in try fm.contentsOfDirectory(at: cacheRoot, includingPropertiesForKeys: nil) {
-            let name = file.lastPathComponent
-            guard name.range(of: "^[a-f0-9]{64}-[0-9]+-[0-9]+-[0-9]+-[a-f0-9]{16}\\.bmp$", options: .regularExpression) != nil,
-                  prefixes.contains(String(name.prefix(64))) else { continue }
-            try fm.removeItem(at: file)
-            removed += 1
-        }
-        return removed
-    }
     // Includes mixed collections: never remove an image that any system entry still references.
     static func referencedFiles(in data: Data, root: URL) throws -> Set<String> {
         var names = Set<String>()

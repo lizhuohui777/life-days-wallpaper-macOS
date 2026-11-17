@@ -6,11 +6,11 @@
 
 照片已去除 EXIF、XMP、IPTC、JPEG 注释及文件尾部附加内容；保留压缩图像扫描数据和显示所需的 JFIF/ICC/Adobe 色彩标记。原始拍摄文件私人保存，代码导出不包含原始照片或个人配置。像素本身仍可能包含可识别信息，元数据清理不等于照片匿名化。
 
-`docs/images/lion-wallpaper.jpg` 展示自行导入照片的效果，使用演示玩家名与天数；不记录用户起始日期。照片及该预览图不自动适用代码许可证。
+`docs/images/lion-wallpaper.jpg` 展示自行导入照片的效果，使用演示玩家名与天数；不记录用户起始日期。照片及该预览图明确排除在项目 MIT 许可证之外，详见 [照片许可证](../bonus/LICENSE)。
 
 ## 默认背景及界面示意
 
-程序默认背景由 `scripts/make_example_background.swift` 生成；`bonus/` 照片不会自动成为默认背景。文档界面 SVG 为项目内绘制的结构示意，默认背景和原创代码素材随项目许可状态管理。
+程序默认背景由 `scripts/make_example_background.swift` 生成；`bonus/` 照片不会自动成为默认背景。文档界面 SVG 为项目内绘制的结构示意，默认背景、项目原创 SVG 和程序生成图标采用项目 [MIT License](../LICENSE)。
 
 ## 字体
 

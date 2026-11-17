@@ -9,6 +9,7 @@ CACHE="$(mktemp -d "${TMPDIR:-/private/tmp/}daywallpaper-build.XXXXXX")"
 trap 'rm -rf "$CACHE"' EXIT
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+cp LICENSE NOTICE "$APP/Contents/Resources/"
 cp Sources/WallpaperApp.swift "$CACHE/main.swift"
 for ARCH in arm64 x86_64; do
   /usr/bin/swiftc -target "$ARCH-apple-macos13.0" -module-cache-path "$CACHE/modules" Sources/Shared.swift "$CACHE/main.swift" -o "$CACHE/app-$ARCH"
@@ -34,5 +35,6 @@ chmod +x "$APP/Contents/MacOS/DayWallpaperApp" "$APP/Contents/Resources/day-wall
 mkdir -p "$CACHE/image"
 cp -R "$APP" "$CACHE/image/"
 cp Resources/使用说明.txt "$CACHE/image/"
+cp LICENSE NOTICE "$CACHE/image/"
 ln -s /Applications "$CACHE/image/Applications"
 /usr/bin/hdiutil create -volname '人生天数壁纸' -srcfolder "$CACHE/image" -ov -format UDZO "dist/人生天数壁纸-$VERSION.dmg"

@@ -1,5 +1,7 @@
 # 人生天数壁纸 / Life Days Wallpaper
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 [![macOS validation](https://github.com/lizhuohui777/life-days-wallpaper-macOS/actions/workflows/macos.yml/badge.svg)](https://github.com/lizhuohui777/life-days-wallpaper-macOS/actions/workflows/macos.yml)
 
 **把人生的每一天，放进你喜欢的风景里。**
@@ -12,11 +14,11 @@
 
 ## 下载与安装
 
-1.8.2 测试版修复每日刷新，改用轻量定时更新，并清理不再被系统引用的本程序旧壁纸。
+1.8.3 已移除引发“访问其他 App 数据”弹窗的系统容器缓存访问；保留午夜更新、登录检查和本程序旧图清理。
 
 适用于 macOS 13 及以上，支持 Apple 芯片和 Intel Mac。
 
-1. 从 [下载页面](https://github.com/lizhuohui777/life-days-wallpaper-macOS/releases/tag/v1.8.2-beta.1) 下载 **Life-Days-Wallpaper-1.8.2-beta.1.dmg**。GitHub 的 `Source code` 是开发源码，不是安装包。
+1. 从 [下载页面](https://github.com/lizhuohui777/life-days-wallpaper-macOS/releases/tag/v1.8.3-beta.1) 下载 **Life-Days-Wallpaper-1.8.3-beta.1.dmg**。GitHub 的 `Source code` 是开发源码，不是安装包。
 2. 打开 DMG，把「人生天数壁纸」拖到「Applications / 应用程序」，再打开应用。
 3. 设置日期和玩家名字；点击「选择背景图片…」导入自己的照片，再点击「应用并开启每日更新」。首次应用时允许控制 System Events。
 
@@ -55,6 +57,12 @@
 - [从源码构建](docs/DEVELOPMENT.md) · [贡献指南](docs/CONTRIBUTING.md)
 - [隐私说明](docs/PRIVACY.md) · [安全说明](SECURITY.md)
 - [更新记录](docs/CHANGELOG.md) · [发布与 App Store 准备](docs/RELEASING.md)
-- [素材权利](docs/ASSETS.md) · [许可状态](LICENSE) · [验证记录](docs/VALIDATION.md)
+- [素材权利](docs/ASSETS.md) · [MIT 许可证](LICENSE) · [验证记录](docs/VALIDATION.md)
 
-仓库公开供查看，代码开源许可仍待作者确认；照片使用范围单独说明。原始照片、个人设置和日志不随仓库发布。报告问题前请删除姓名、日期、个人路径和照片。
+## 许可证
+
+除单独标明的照片素材外，本项目原创代码、文档文字及程序生成素材采用 [MIT License](LICENSE)，可使用、修改、分发和商用，须保留版权和许可声明。
+
+狮子照片 `bonus/lion.jpg` 与其照片预览 `docs/images/lion-wallpaper.jpg` **不适用 MIT**，继续按[照片单独授权](bonus/LICENSE)及[附赠图片说明](bonus/README.md)使用；摄影版权归作者。素材范围另见 [NOTICE](NOTICE)。
+
+原始照片、个人设置和日志不随仓库发布。报告问题前请删除姓名、日期、个人路径和照片。

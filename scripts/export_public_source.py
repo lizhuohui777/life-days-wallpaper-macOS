@@ -6,16 +6,16 @@ import shutil
 
 PROJECT = Path(__file__).resolve().parents[1]
 FILES = [
-    'README.md', 'LICENSE', 'docs/ASSETS.md', 'docs/PRIVACY.md', 'SECURITY.md',
+    'README.md', 'LICENSE', 'NOTICE', 'docs/ASSETS.md', 'docs/PRIVACY.md', 'SECURITY.md',
     'docs/CONTRIBUTING.md', 'docs/CHANGELOG.md', '.gitignore', 'Resources/Info.plist',
     'Sources/WallpaperApp.swift', 'Sources/DayWallpaper.swift', 'Sources/Shared.swift',
     'scripts/build.sh', 'scripts/open-app.command', 'Resources/使用说明.txt',
     'scripts/test.sh', 'scripts/strip_photo_metadata.py',
     'scripts/make_example_background.swift', 'scripts/make_icon.swift', 'scripts/export_public_source.py',
     'Tests/main.swift', 'Tests/test_metadata.py', 'Tests/test_worker_preview.py',
-    'docs/INSTALL.md', 'docs/DEVELOPMENT.md', 'docs/UNINSTALL.md', 'docs/RELEASING.md', 'docs/VALIDATION.md', 'docs/LICENSE-MIT.proposed',
+    'docs/INSTALL.md', 'docs/DEVELOPMENT.md', 'docs/UNINSTALL.md', 'docs/RELEASING.md', 'docs/VALIDATION.md',
     'docs/images/interface.svg', 'docs/images/example-wallpaper.png', 'docs/images/lion-wallpaper.jpg',
-    'bonus/README.md', 'bonus/lion.jpg',
+    'bonus/README.md', 'bonus/LICENSE', 'bonus/lion.jpg',
     '.github/workflows/macos.yml', '.github/ISSUE_TEMPLATE/bug_report.md',
     '.github/pull_request_template.md',
 ]
